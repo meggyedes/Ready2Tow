@@ -85,7 +85,7 @@ const Layout = ({ children }: LayoutProps) => {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-3 left-3 right-3 bg-white/58 backdrop-blur-md shadow-md border border-white/70 rounded-2xl z-50">
+      <nav className="fixed bottom-3 left-3 right-3 bg-white/72 backdrop-blur-md shadow-md border border-white/80 rounded-2xl z-50">
         <div className="px-2 md:px-3">
           <div className="flex justify-around items-center py-1.5">
             {navItems.map((item) => {
@@ -108,8 +108,8 @@ const Layout = ({ children }: LayoutProps) => {
                     whileTap={!isActive ? { scale: 0.95 } : {}}
                     className={`flex flex-col items-center py-1.5 px-2 rounded-xl transition-all duration-300 ${
                       isActive
-                        ? 'text-blue-600'
-                        : 'text-gray-500 hover:text-blue-500'
+                        ? 'text-blue-700 bg-white/85 shadow-sm'
+                        : 'text-slate-700 bg-white/45 hover:bg-white/70 hover:text-blue-600'
                     }`}
                   >
                     <motion.div
