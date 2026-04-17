@@ -15,6 +15,7 @@ import {
   Package,
 } from 'lucide-react'
 import 'flag-icons/css/flag-icons.min.css'
+import { useLanguage } from '../context/LanguageContext'
 
 interface KreszRule {
   id: string
@@ -42,7 +43,101 @@ const getCountryFlagCode = (country: string): string => {
   return flagCodes[country] || 'un'
 }
 
+const countryLabelsEn: Record<string, string> = {
+  'Hollandia': 'Netherlands',
+  'Németország': 'Germany',
+  'Ausztria': 'Austria',
+  'Svájc': 'Switzerland',
+  'Luxemburg': 'Luxembourg',
+  'Olaszország': 'Italy',
+  'Csehország': 'Czechia',
+  'Lengyelország': 'Poland',
+  'Szlovákia': 'Slovakia',
+}
+
+const categoryLabelsEn: Record<string, string> = {
+  'Sebességkorlátozások': 'Speed limits',
+  'Méretek és Tömegek': 'Dimensions and weights',
+  'Előzés': 'Overtaking',
+  'Biztonsági Előírások': 'Safety requirements',
+  'Rakodás': 'Loading',
+  'Parkolás és Megállás': 'Parking and stopping',
+  'Tolatás és Kanyarodás': 'Reversing and turning',
+  'Dokumentumok': 'Documents',
+  'Különleges Helyzetek': 'Special situations',
+  'Kötelező Felszerelések': 'Required equipment',
+  'Díjak és Úthasználat': 'Road fees and usage',
+  'Különleges Szabályok': 'Special rules',
+}
+
+const kreszRuleEn: Record<string, { title: string; content: string }> = {
+  '1': { title: 'Maximum speed in built-up area', content: 'When towing a trailer in built-up areas, the maximum allowed speed is 50 km/h, even if higher limits apply without a trailer.' },
+  '2': { title: 'Maximum speed outside built-up area', content: 'When towing outside built-up areas, the maximum speed is 80 km/h on regular and express roads unless signed otherwise.' },
+  '3': { title: 'On motorways', content: 'When towing on motorways, the maximum speed is 80 km/h, which is lower than the limit for passenger cars without trailers.' },
+  '4': { title: 'Maximum gross combination mass', content: 'With BE category rules, check towing vehicle and trailer limits so the combination stays within legally permitted gross mass.' },
+  '5': { title: 'Maximum length', content: 'The combined car and trailer length must remain within legal limits; verify both total combination and trailer-only values.' },
+  '6': { title: 'Maximum width', content: 'Trailer width must stay within legal maximum. Cargo must not protrude beyond the trailer sides.' },
+  '7': { title: 'Maximum height', content: 'Total vehicle-trailer-cargo height must not exceed the allowed maximum; check low bridges and restrictions before departure.' },
+  '8': { title: 'Overtaking rules', content: 'With a trailer, overtake only when legal and safe, and ensure enough distance and time to complete the maneuver.' },
+  '9': { title: 'Overtaking prohibition', content: 'Do not overtake in bends, on hills, near pedestrian crossings, or before railway crossings where overtaking is prohibited.' },
+  '10': { title: 'Safety chain/cable', content: 'Attach a safety chain or breakaway cable correctly to prevent complete trailer separation if the main coupling fails.' },
+  '11': { title: 'Mirrors', content: 'Use mirrors that provide sufficient rear and side visibility around the trailer; fit extension mirrors when needed.' },
+  '12': { title: 'Lighting and signals', content: 'Trailer tail lights, brake lights, indicators, and plate illumination must all function correctly before starting the trip.' },
+  '13': { title: 'Cargo securing', content: 'Load must be positioned and secured so it cannot shift, fall, or endanger traffic. Respect overhang limits.' },
+  '14': { title: 'Weight distribution', content: 'Distribute load properly for stable axle load and hitch load. Poor balance increases sway and braking risk.' },
+  '15': { title: 'Parking rules', content: 'Follow parking restrictions for towing combinations and avoid prohibited zones such as sidewalks and cycle paths.' },
+  '16': { title: 'Stopping on slope', content: 'On slopes, secure both towing vehicle and trailer with parking brake and wheel chocks where needed.' },
+  '17': { title: 'Reversing', content: 'Reversing with a trailer requires slow steering corrections because trailer direction reacts opposite to steering input.' },
+  '18': { title: 'Turning', content: 'Take wider turns with trailers to avoid curb strikes and collisions due to trailer off-tracking.' },
+  '19': { title: 'Required documents', content: 'Carry valid driving license, registration, and insurance documents for towing vehicle and trailer at all times.' },
+  '20': { title: 'Emergency situation', content: 'In breakdown or emergency, stop safely, place warning triangle at legal distance, and request assistance.' },
+  '21': { title: 'Urban speed limit', content: 'In the Netherlands, trailer towing is generally limited to 50 km/h in urban areas, depending on local zone signs.' },
+  '22': { title: 'Motorway speed limit', content: 'In the Netherlands, towing speed on motorways is typically limited; check local signs and conditions.' },
+  '23': { title: 'Required equipment', content: 'In the Netherlands carry mandatory safety equipment and valid travel documents for all relevant passengers and vehicle class.' },
+  '24': { title: 'Road usage fees', content: 'The Netherlands has no general passenger motorway toll, but city parking and specific crossings may be charged.' },
+  '25': { title: 'Cyclist lane priority', content: 'In the Netherlands, respect cycle lane priority and visibility; blocking bike lanes can lead to serious penalties.' },
+  '26': { title: 'Motorway speed limit', content: 'In Germany, trailer towing speed limits apply by road type; always follow posted limits and trailer regulations.' },
+  '27': { title: 'Required equipment', content: 'In Germany keep required warning and safety equipment available, including high-visibility items and legal documents.' },
+  '28': { title: 'Road usage fees', content: 'German passenger cars are generally toll-free on Autobahn, while certain heavier categories use toll systems.' },
+  '29': { title: 'Lane discipline and overtaking', content: 'In Germany, keep right except when overtaking and return to right lane after overtaking safely.' },
+  '30': { title: 'Motorway speed limit', content: 'In Austria, towing limits apply on motorways and regular roads; verify signs and trailer-specific restrictions.' },
+  '31': { title: 'Road usage fees - vignette', content: 'Austria requires a valid vignette for motorway use. Select correct duration and keep proof of validity.' },
+  '32': { title: 'Required equipment', content: 'In Austria carry legally required safety equipment and documents; requirements may be checked roadside.' },
+  '33': { title: 'Winter equipment', content: 'In winter conditions, Austria may require winter tires or chains for towing vehicles and trailers.' },
+  '34': { title: 'Motorway speed limit', content: 'In Switzerland, trailer towing speed limits apply by road category; follow posted signs carefully.' },
+  '35': { title: 'Road usage fees - vignette', content: 'Switzerland requires a valid motorway vignette; driving without one can result in substantial fines.' },
+  '36': { title: 'Required equipment', content: 'In Switzerland keep mandatory safety and travel documents in the vehicle and trailer combination.' },
+  '37': { title: 'Mountain roads and tunnel tolls', content: 'Certain Swiss mountain routes and tunnels require extra fees; check planned route costs before travel.' },
+  '38': { title: 'Motorway speed limit', content: 'In Luxembourg, towing speed limits vary by road type and signage; verify current legal limits before driving.' },
+  '39': { title: 'Road usage fees', content: 'Luxembourg has no standard passenger motorway toll, but local parking and special zones may be charged.' },
+  '40': { title: 'Required equipment', content: 'In Luxembourg carry the recommended and mandatory safety equipment and valid driving/travel documents.' },
+  '41': { title: 'Motorway speed limit', content: 'In Italy, towing speed limits differ by motorway and secondary roads; always follow posted restrictions.' },
+  '42': { title: 'Road usage fees - Autostrada', content: 'Italian motorways are tolled; towing combinations may pay higher category-based fees depending on axle class.' },
+  '43': { title: 'Required equipment', content: 'In Italy carry mandatory warning and safety gear, and comply with daytime light requirements where applicable.' },
+  '44': { title: 'Daytime lights and enforcement', content: 'Italy enforces speed limits strictly and requires proper lighting use; violations can result in high fines.' },
+  '45': { title: 'Motorway speed limit', content: 'In Czechia, towing speed limits are road-type dependent; obey posted limits and trailer restrictions.' },
+  '46': { title: 'Road usage fees - vignette', content: 'Czech motorways require a valid vignette. Ensure the registration is valid before entering toll roads.' },
+  '47': { title: 'Required equipment', content: 'In Czechia carry mandatory safety equipment and documents, with seasonal winter requirements when applicable.' },
+  '48': { title: 'Winter equipment and lights', content: 'Czech winter season rules may require winter tires; daytime lights and speed compliance are enforced.' },
+  '49': { title: 'Motorway speed limit', content: 'In Poland, towing speed limits depend on road category and posted signs; verify local limits.' },
+  '50': { title: 'Road usage fees', content: 'Poland uses mixed toll systems by section and category; confirm required payment method for your route.' },
+  '51': { title: 'Required equipment', content: 'In Poland carry mandatory warning equipment, documents, and comply with daytime lighting requirements.' },
+  '52': { title: 'Daytime lights and enforcement', content: 'Poland enforces speed and lighting rules strictly; towing combinations should plan for regular checks.' },
+  '53': { title: 'Motorway speed limit', content: 'In Slovakia, towing speed limits vary by road class and signage; follow local legal restrictions.' },
+  '54': { title: 'Road usage fees - vignette', content: 'A valid Slovak vignette is required on designated motorways; penalties apply for missing or invalid passes.' },
+  '55': { title: 'Required equipment', content: 'In Slovakia carry mandatory safety items and travel documents; seasonal winter rules may also apply.' },
+  '56': { title: 'Winter equipment and lights', content: 'In Slovakia, winter tires may be required seasonally and daytime light usage is mandatory in many situations.' },
+}
+
+const getCountryLabel = (country: string, language: 'hu' | 'en') => {
+  if (language === 'en') {
+    return countryLabelsEn[country] ?? country
+  }
+  return country
+}
+
 const Kresz = () => {
+  const { language, t } = useLanguage()
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -532,17 +627,30 @@ const Kresz = () => {
     },
   ]
 
+  const localizedRules = useMemo(() => {
+    if (language !== 'en') {
+      return rules
+    }
+
+    return rules.map((rule) => ({
+      ...rule,
+      category: categoryLabelsEn[rule.category] ?? rule.category,
+      title: kreszRuleEn[rule.id]?.title ?? rule.title,
+      content: kreszRuleEn[rule.id]?.content ?? rule.content,
+    }))
+  }, [language, rules])
+
   // Memoize filtered rules to avoid recalculating on every render
   const filteredRules = useMemo(() => {
     const lowerSearch = searchTerm.toLowerCase()
-    return rules.filter(
+    return localizedRules.filter(
       rule =>
         rule.title.toLowerCase().includes(lowerSearch) ||
         rule.content.toLowerCase().includes(lowerSearch) ||
         rule.category.toLowerCase().includes(lowerSearch) ||
-        (rule.country && rule.country.toLowerCase().includes(lowerSearch))
+        (rule.country && getCountryLabel(rule.country, language).toLowerCase().includes(lowerSearch))
     )
-  }, [searchTerm, rules])
+  }, [language, localizedRules, searchTerm])
 
   // Separate Hungarian and International rules
   const hungarianRules = useMemo(
@@ -580,11 +688,14 @@ const Kresz = () => {
         className="mb-6"
       >
         <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          KRESZ Referencia - BE Kategória
+          {t('rules.title')}
         </h2>
         <p className="text-gray-600">
-          Fontos közlekedési szabályok pótkocsival való vontatáshoz
+          {t('rules.subtitle')}
         </p>
+        {language === 'en' && (
+          <p className="text-xs text-blue-700 mt-2">{t('rules.englishNote')}</p>
+        )}
       </motion.div>
 
       {/* Search Bar */}
@@ -597,7 +708,7 @@ const Kresz = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Keresés a szabályok között..."
+            placeholder={t('rules.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
@@ -614,7 +725,7 @@ const Kresz = () => {
         >
           <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
             <div className="fib fi-hu" style={{ width: '32px', height: '24px' }}></div>
-            Magyarország
+            {t('rules.hungary')}
           </h2>
 
           {hungarianCategories.map((category, categoryIndex) => {
@@ -662,7 +773,7 @@ const Kresz = () => {
                           {rule.title}
                           {rule.important && (
                             <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
-                              Fontos!
+                              {t('rules.important')}
                             </span>
                           )}
                         </h4>
@@ -713,7 +824,7 @@ const Kresz = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">Nemzetközi Szabályok
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">{t('rules.international')}
           </h2>
 
           {countries.map((country, countryIndex) => {
@@ -731,7 +842,7 @@ const Kresz = () => {
               >
                 <h3 className="text-lg font-bold text-gray-800 mb-3 pt-4 flex items-center gap-3">
                   <div className={`fib fi-${getCountryFlagCode(country)}`} style={{ width: '32px', height: '24px' }}></div>
-                  {country}
+                  {getCountryLabel(country, language)}
                 </h3>
                 <div className="space-y-2">
                   {countryRules.map((rule, index) => (
@@ -761,7 +872,7 @@ const Kresz = () => {
                               {rule.title}
                               {rule.important && (
                                 <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
-                                  Fontos!
+                                  {t('rules.important')}
                                 </span>
                               )}
                             </h4>
@@ -813,10 +924,10 @@ const Kresz = () => {
         >
           <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 text-lg">
-            Nem található ilyen szabály
+            {t('rules.emptyTitle')}
           </p>
           <p className="text-gray-400 text-sm mt-2">
-            Próbálj meg más keresési kifejezést használni
+            {t('rules.emptySubtitle')}
           </p>
         </motion.div>
       )}
