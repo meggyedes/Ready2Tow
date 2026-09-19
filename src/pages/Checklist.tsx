@@ -362,49 +362,49 @@ const ChecklistItemComponent = React.memo<{
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ delay: index * 0.03, duration: 0.25 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onToggle(item.id)}
-      className={`card cursor-pointer transition-all duration-300 p-3 md:p-4 ${
+      className={`group relative cursor-pointer rounded-xl border transition-all duration-200 p-3 md:p-4 ${
         item.checked
-          ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300'
-          : 'hover:shadow-xl'
+          ? 'bg-gradient-to-r from-red-950/80 via-red-900/40 to-black/60 border-red-500/60 shadow-glow-red'
+          : 'bg-[#121217]/90 border-white/[0.08] hover:border-red-500/50 hover:bg-[#191922] hover:shadow-glow-red'
       }`}
     >
-      <div className="flex items-start gap-2 md:gap-4">
-        <div className="flex-shrink-0">
+      <div className="flex items-start gap-3 md:gap-4">
+        <div className="flex-shrink-0 pt-0.5">
           {item.checked ? (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 500, damping: 15 }}
             >
-              <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
+              <CheckCircle2 className="w-6 h-6 text-red-500" />
             </motion.div>
           ) : (
-            <Circle className="w-6 h-6 md:w-8 md:h-8 text-gray-400" />
+            <Circle className="w-6 h-6 text-slate-500 group-hover:text-red-400 transition-colors" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 md:gap-2 mb-1">
-            <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" />
+          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+            <IconComponent className={`w-4 h-4 flex-shrink-0 ${item.checked ? 'text-red-400' : 'text-red-500'}`} />
             <h4 className={`text-sm md:text-base font-semibold ${
-              item.checked ? 'text-green-800 line-through' : 'text-gray-800'
+              item.checked ? 'text-red-200 line-through decoration-red-500/50' : 'text-white group-hover:text-white'
             }`}>
               {item.country && (
                 <span className="inline-flex items-center gap-1 mr-2">
-                  <div className={`fib fi-${COUNTRY_FLAGS[item.country]}`} style={{ width: '16px', height: '12px' }}></div>
-                  <span className="text-xs font-normal text-gray-600">{getCountryLabel(item.country, language)}</span>
-                  <span className="text-gray-400">-</span>
+                  <div className={`fib fi-${COUNTRY_FLAGS[item.country]}`} style={{ width: '14px', height: '10px' }}></div>
+                  <span className="text-[10px] font-mono text-slate-400">{getCountryLabel(item.country, language)}</span>
+                  <span className="text-slate-600">—</span>
                 </span>
               )}
               {item.title}
             </h4>
           </div>
-          <p className={`text-xs md:text-sm ${
-            item.checked ? 'text-green-700' : 'text-gray-600'
+          <p className={`text-xs md:text-sm leading-relaxed ${
+            item.checked ? 'text-red-300/80' : 'text-slate-300'
           }`}>
             {item.description}
           </p>
@@ -866,93 +866,215 @@ const Checklist = () => {
     })
   }, [])
 
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'completed'>('all')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+  // Filtered items based on active tab and category
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      const matchesStatus =
+        filterStatus === 'all' ||
+        (filterStatus === 'pending' && !item.checked) ||
+        (filterStatus === 'completed' && item.checked)
+
+      const matchesCategory =
+        selectedCategory === 'all' || item.category === selectedCategory
+
+      return matchesStatus && matchesCategory
+    })
+  }, [items, filterStatus, selectedCategory])
+
+  const filteredCategories = useMemo(() => {
+    if (selectedCategory !== 'all') {
+      return [selectedCategory]
+    }
+    return Array.from(new Set(filteredItems.map(item => item.category)))
+  }, [filteredItems, selectedCategory])
+
   return (
-    <div className="max-w-4xl mx-auto px-3 md:px-4">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-4 md:mb-6"
+        className="space-y-1.5"
       >
-        <h2 className="text-xl md:text-3xl font-bold text-gray-800 mb-1 md:mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono text-red-400 font-bold uppercase tracking-wider bg-red-950/80 px-2.5 py-0.5 rounded-md border border-red-800/60">
+            CHECKLIST PROTOCOL
+          </span>
+        </div>
+        <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
           {t('checklist.title')}
         </h2>
-        <p className="text-sm md:text-base text-gray-600">
+        <p className="text-sm md:text-base text-slate-300">
           {t('checklist.subtitle')}
         </p>
-        {language === 'en' && (
-          <p className="text-xs text-blue-700 mt-2">{t('checklist.englishNote')}</p>
-        )}
       </motion.div>
 
-      {/* Country Selector */}
+      {/* Country Selector / Transit Waypoint Route */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card mb-4 md:mb-6 p-3 md:p-4"
+        className="rounded-2xl bg-[#121217]/90 backdrop-blur-xl border border-white/[0.1] p-4 md:p-5 shadow-2xl"
       >
-        <h3 className="text-base md:text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <Globe className="w-5 h-5 text-blue-600" />
-          {t('checklist.routeTitle')}
-        </h3>
-        <p className="text-xs md:text-sm text-gray-600 mb-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm md:text-base font-bold text-white flex items-center gap-2">
+            <Globe className="w-4 h-4 text-red-500" />
+            {t('checklist.routeTitle')}
+          </h3>
+          <span className="text-[11px] font-mono text-red-300 bg-red-950/80 px-2 py-0.5 rounded border border-red-800/60 font-bold">
+            {selectedCountries.length} {language === 'en' ? 'countries active' : 'ország aktív'}
+          </span>
+        </div>
+        <p className="text-xs text-slate-300 mb-3.5 leading-relaxed">
           {t('checklist.routeDesc')}
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-          {COUNTRIES.map(country => (
-            <motion.button
-              key={country}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toggleCountry(country)}
-              className={`p-2 md:p-3 rounded-lg transition-all flex items-center justify-center gap-1.5 text-xs md:text-sm font-medium ${
-                selectedCountries.includes(country)
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              } ${country === 'Magyarország' ? 'cursor-not-allowed opacity-75' : ''}`}
-              disabled={country === 'Magyarország'}
-            >
-              <div className={`fib fi-${COUNTRY_FLAGS[country]}`} style={{ width: '16px', height: '12px' }}></div>
-              <span className="hidden sm:inline">{getCountryLabel(country, language)}</span>
-            </motion.button>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          {COUNTRIES.map(country => {
+            const isSelected = selectedCountries.includes(country)
+            const isDefault = country === 'Magyarország'
+
+            return (
+              <motion.button
+                key={country}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => toggleCountry(country)}
+                className={`p-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-xs font-semibold ${
+                  isSelected
+                    ? 'bg-gradient-to-r from-red-600/30 to-red-900/30 border border-red-500/70 text-white shadow-glow-red font-bold'
+                    : 'bg-[#181820] border border-white/10 text-slate-300 hover:text-white hover:border-white/25'
+                } ${isDefault ? 'opacity-90' : ''}`}
+                disabled={isDefault}
+                title={isDefault ? (language === 'en' ? 'Default starting country' : 'Alapértelmezett kiindulási ország') : ''}
+              >
+                <div className={`fib fi-${COUNTRY_FLAGS[country]}`} style={{ width: '16px', height: '12px' }}></div>
+                <span className="truncate">{getCountryLabel(country, language)}</span>
+              </motion.button>
+            )
+          })}
         </div>
       </motion.div>
 
-      {/* Progress Bar */}
+      {/* Progress & Quick Control Bar */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="card mb-4 md:mb-6 p-3 md:p-4"
+        className="rounded-2xl bg-[#121217]/90 backdrop-blur-xl border border-white/[0.1] p-4 md:p-5 shadow-2xl space-y-4"
       >
-        <div className="flex justify-between items-center mb-2 md:mb-3">
+        <div className="flex flex-wrap justify-between items-center gap-3">
           <div>
-            <span className="text-sm md:text-lg font-semibold text-gray-800">
-              {checkedCount}/{items.length} {t('checklist.doneItems')}
-            </span>
-            <p className="text-xs text-gray-500 mt-1">
-              {Math.round(progress)}% - {items.length - checkedCount} {t('checklist.remaining')}
+            <div className="flex items-center gap-2">
+              <span className="text-xl md:text-2xl font-black font-display text-white">
+                {checkedCount} <span className="text-slate-500 text-base font-normal">/ {items.length}</span>
+              </span>
+              <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
+                progress === 100 ? 'bg-red-600 text-white shadow-glow-red' : 'bg-red-500/20 text-red-300 border border-red-500/40'
+              }`}>
+                {Math.round(progress)}%
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5 font-medium">
+              {items.length - checkedCount > 0
+                ? `${items.length - checkedCount} ${t('checklist.remaining')}`
+                : t('checklist.allCompletedTitle')}
             </p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={resetChecklist}
-            className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-xs md:text-sm"
-          >
-            <RotateCcw size={16} className="md:w-[18px] md:h-[18px]" />
-            <span className="font-medium">{t('checklist.reset')}</span>
-          </motion.button>
+
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={resetChecklist}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#181820] hover:bg-[#22222c] text-slate-200 hover:text-white rounded-xl border border-white/15 text-xs font-medium transition-all"
+            >
+              <RotateCcw size={14} />
+              <span>{t('checklist.reset')}</span>
+            </motion.button>
+          </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2 md:h-4 overflow-hidden">
+
+        {/* Progress Track */}
+        <div className="w-full bg-black/80 rounded-full h-2.5 p-0.5 border border-white/10 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.5 }}
-            className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-red-600 via-rose-500 to-red-400 shadow-glow-red"
           />
         </div>
+
+        {/* Filter Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/[0.06]">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-white/10">
+            <button
+              onClick={() => setFilterStatus('all')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                filterStatus === 'all'
+                  ? 'bg-red-600 text-white font-bold shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {t('checklist.filterAll')} ({items.length})
+            </button>
+            <button
+              onClick={() => setFilterStatus('pending')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                filterStatus === 'pending'
+                  ? 'bg-red-600 text-white font-bold shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {t('checklist.filterPending')} ({items.length - checkedCount})
+            </button>
+            <button
+              onClick={() => setFilterStatus('completed')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                filterStatus === 'completed'
+                  ? 'bg-white text-black font-bold shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {t('checklist.filterDone')} ({checkedCount})
+            </button>
+          </div>
+
+          {/* Category Dropdown */}
+          <div className="flex-1 min-w-[160px] max-w-[240px]">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full text-xs font-medium bg-[#181820] text-slate-200 border border-white/15 rounded-xl px-3 py-1.5 focus:outline-none focus:border-red-500"
+            >
+              <option value="all">{t('checklist.allCategories')}</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </motion.div>
+
+      {/* 100% Completed Ready Banner */}
+      {progress === 100 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="rounded-2xl bg-gradient-to-r from-red-950/90 via-black/90 to-red-950/90 border border-red-500/70 p-5 shadow-glow-red text-center space-y-2"
+        >
+          <div className="w-12 h-12 rounded-full bg-red-500/20 border border-red-400/50 flex items-center justify-center mx-auto text-red-300">
+            <CheckCircle2 className="w-7 h-7 text-red-500" />
+          </div>
+          <h3 className="text-lg md:text-xl font-bold text-white">
+            {t('checklist.allCompletedTitle')}
+          </h3>
+          <p className="text-xs md:text-sm text-red-200/90 max-w-md mx-auto">
+            {t('checklist.allCompletedDesc')}
+          </p>
+        </motion.div>
+      )}
 
       {/* Confetti Effect */}
       <AnimatePresence>
@@ -961,50 +1083,68 @@ const Checklist = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center"
+            className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="text-6xl"
+              initial={{ scale: 0.5, rotate: -10 }}
+              animate={{ scale: 1.2, rotate: 0 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', damping: 12 }}
+              className="text-7xl p-8 rounded-3xl bg-[#14141a] border border-red-500/70 shadow-glow-red"
             >
-              🎉
+              🚀
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Checklist Items by Category */}
-      {categories.map((category, categoryIndex) => (
-        <motion.div
-          key={category}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: categoryIndex * 0.1 }}
-          className="mb-4 md:mb-6"
-        >
-          <h3 className="text-base md:text-xl font-bold text-gray-800 mb-2 md:mb-3 flex items-center">
-            {category}
-          </h3>
-          <div className="space-y-2 md:space-y-3">
-            {items
-              .filter(item => item.category === category)
-              .map((item, index) => (
-                <ChecklistItemComponent
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  onToggle={toggleItem}
-                  language={language}
-                />
-              ))}
-          </div>
-        </motion.div>
-      ))}
+      <div className="space-y-6">
+        {filteredCategories.map((category, categoryIndex) => {
+          const categoryItems = filteredItems.filter(item => item.category === category)
+          if (categoryItems.length === 0) return null
 
-      {/* Bottom Spacing for Navigation */}
-      <div className="h-8"></div>
+          return (
+            <motion.div
+              key={category}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: categoryIndex * 0.05 }}
+              className="space-y-2.5"
+            >
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  {category}
+                </h3>
+                <span className="text-[11px] font-mono text-slate-400 font-medium">
+                  {categoryItems.filter(i => i.checked).length}/{categoryItems.length}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {categoryItems.map((item, index) => (
+                  <ChecklistItemComponent
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    onToggle={toggleItem}
+                    language={language}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )
+        })}
+
+        {filteredItems.length === 0 && (
+          <div className="rounded-2xl bg-[#121217]/80 border border-white/10 p-8 text-center text-slate-400 text-sm">
+            Nincs megjeleníthető elem a kiválasztott szűrők alapján.
+          </div>
+        )}
+      </div>
+
+      <div className="h-6" />
     </div>
   )
 }

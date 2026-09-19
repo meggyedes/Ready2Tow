@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
   ChevronDown,
-  ChevronUp,
   Gauge,
   Weight,
   Ruler,
@@ -13,6 +12,8 @@ import {
   Truck,
   MapPin,
   Package,
+  X,
+  Compass,
 } from 'lucide-react'
 import 'flag-icons/css/flag-icons.min.css'
 import { useLanguage } from '../context/LanguageContext'
@@ -679,136 +680,163 @@ const Kresz = () => {
     setExpandedId(expandedId === id ? null : id)
   }
 
-  return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
+  // Rule Card component for consistent rendering
+  const RuleCard = ({ rule, index }: { rule: KreszRule; index: number }) => {
+    const isExpanded = expandedId === rule.id
+
+    return (
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
+        key={rule.id}
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.03, duration: 0.25 }}
+        className={`group rounded-xl border cursor-pointer transition-all duration-200 p-4 md:p-5 ${
+          rule.important
+            ? 'bg-gradient-to-r from-red-950/70 via-black/80 to-red-950/70 border-red-500/70 shadow-glow-red'
+            : 'bg-[#121217]/90 border-white/[0.08] hover:border-red-500/50 hover:bg-[#181820]'
+        } ${isExpanded ? 'shadow-lg border-red-500/60' : ''}`}
+        onClick={() => toggleExpand(rule.id)}
       >
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+        <div className="flex items-start gap-3 md:gap-4">
+          <div className="flex-shrink-0">
+            <div
+              className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center shadow-lg border border-white/20 ${
+                rule.important
+                  ? 'bg-gradient-to-br from-red-600 to-rose-700'
+                  : 'bg-gradient-to-br from-[#1e1e28] to-[#121218]'
+              }`}
+            >
+              <rule.icon className={`w-5 h-5 ${rule.important ? 'text-white' : 'text-red-400'}`} />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="font-bold text-white text-sm md:text-base flex items-center gap-2 flex-wrap">
+                {rule.title}
+                {rule.important && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/40 rounded-full">
+                    <AlertTriangle className="w-2.5 h-2.5" />
+                    {t('rules.important')}
+                  </span>
+                )}
+              </h4>
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex-shrink-0"
+              >
+                <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" />
+              </motion.div>
+            </div>
+            <AnimatePresence>
+              {isExpanded ? (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="text-sm text-slate-200 mt-2 leading-relaxed"
+                >
+                  {rule.content}
+                </motion.p>
+              ) : (
+                <p className="text-xs md:text-sm text-slate-400 mt-1 line-clamp-1">
+                  {rule.content}
+                </p>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Modern Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -15 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-1.5"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono text-red-400 font-bold uppercase tracking-wider bg-red-950/80 px-2.5 py-0.5 rounded-md border border-red-800/60">
+            RULE DATABASE
+          </span>
+          <span className="text-[11px] font-mono text-slate-400 font-medium">
+            {filteredRules.length} {language === 'en' ? 'results' : 'találat'}
+          </span>
+        </div>
+        <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
           {t('rules.title')}
         </h2>
-        <p className="text-gray-600">
+        <p className="text-sm text-slate-300">
           {t('rules.subtitle')}
         </p>
-        {language === 'en' && (
-          <p className="text-xs text-blue-700 mt-2">{t('rules.englishNote')}</p>
-        )}
       </motion.div>
 
       {/* Search Bar */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="card mb-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl bg-[#121217]/90 backdrop-blur-xl border border-white/[0.1] p-4 shadow-2xl"
       >
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             placeholder={t('rules.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+            className="w-full pl-11 pr-10 py-3 bg-[#181820] border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:border-red-500/80 focus:outline-none focus:ring-1 focus:ring-red-500/40 transition-all text-sm font-medium"
           />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </motion.div>
 
-      {/* Hungarian Rules Section */}
+      {/* ========== Hungarian Rules ========== */}
       {hungarianRules.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="space-y-5"
         >
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
-            <div className="fib fi-hu" style={{ width: '32px', height: '24px' }}></div>
-            {t('rules.hungary')}
-          </h2>
+          <div className="flex items-center gap-3 border-b border-white/[0.08] pb-3">
+            <div className="fib fi-hu" style={{ width: '24px', height: '18px' }}></div>
+            <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">
+              {t('rules.hungary')}
+            </h2>
+            <span className="text-[11px] font-mono text-slate-400 ml-auto font-medium">
+              {hungarianRules.length} {language === 'en' ? 'rules' : 'szabály'}
+            </span>
+          </div>
 
           {hungarianCategories.map((category, categoryIndex) => {
             const categoryRules = hungarianRules.filter(rule => rule.category === category)
-
             if (categoryRules.length === 0) return null
 
             return (
               <motion.div
                 key={category}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: categoryIndex * 0.05 }}
-                className="mb-4"
+                transition={{ delay: categoryIndex * 0.04 }}
+                className="space-y-2.5"
               >
-                <h3 className="text-lg font-semibold text-gray-700 mb-2 pt-2 flex items-center">
-
+                <h3 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold flex items-center gap-2 px-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                   {category}
                 </h3>
                 <div className="space-y-2">
                   {categoryRules.map((rule, index) => (
-                <motion.div
-                  key={rule.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`card cursor-pointer transition-all duration-300 hover:shadow-xl border-l-4 ${
-                    rule.important ? 'border-orange-500' : 'border-blue-500'
-                  }`}
-                  onClick={() => toggleExpand(rule.id)}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        rule.important
-                          ? 'bg-gradient-to-br from-orange-500 to-red-500'
-                          : 'bg-gradient-to-br from-blue-500 to-cyan-500'
-                      }`}>
-                        <rule.icon className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-                          {rule.title}
-                          {rule.important && (
-                            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
-                              {t('rules.important')}
-                            </span>
-                          )}
-                        </h4>
-                        <motion.div
-                          animate={{ rotate: expandedId === rule.id ? 180 : 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {expandedId === rule.id ? (
-                            <ChevronUp className="w-5 h-5 text-gray-400" />
-                          ) : (
-                            <ChevronDown className="w-5 h-5 text-gray-400" />
-                          )}
-                        </motion.div>
-                      </div>
-                      <AnimatePresence>
-                        {expandedId === rule.id && (
-                          <motion.p
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="text-sm text-gray-600 mt-2 leading-relaxed"
-                          >
-                            {rule.content}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
-                      {expandedId !== rule.id && (
-                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                          {rule.content}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
+                    <RuleCard key={rule.id} rule={rule} index={index} />
                   ))}
                 </div>
               </motion.div>
@@ -817,97 +845,46 @@ const Kresz = () => {
         </motion.div>
       )}
 
-      {/* International Rules Section */}
+      {/* ========== International Rules ========== */}
       {countries.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-5"
         >
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">{t('rules.international')}
-          </h2>
+          <div className="flex items-center gap-3 border-b border-white/[0.08] pb-3">
+            <Compass className="w-5 h-5 text-red-500" />
+            <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">
+              {t('rules.international')}
+            </h2>
+            <span className="text-[11px] font-mono text-slate-400 ml-auto font-medium">
+              {countries.length} {language === 'en' ? 'countries' : 'ország'}
+            </span>
+          </div>
 
           {countries.map((country, countryIndex) => {
             const countryRules = internationalRules.filter(rule => rule.country === country)
-
             if (countryRules.length === 0) return null
 
             return (
               <motion.div
                 key={country}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + countryIndex * 0.1 }}
-                className="mb-6"
+                transition={{ delay: 0.15 + countryIndex * 0.05 }}
+                className="space-y-2.5"
               >
-                <h3 className="text-lg font-bold text-gray-800 mb-3 pt-4 flex items-center gap-3">
-                  <div className={`fib fi-${getCountryFlagCode(country)}`} style={{ width: '32px', height: '24px' }}></div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2.5 px-1 pt-2">
+                  <div className={`fib fi-${getCountryFlagCode(country)}`} style={{ width: '20px', height: '15px' }}></div>
                   {getCountryLabel(country, language)}
+                  <span className="text-[11px] font-mono text-slate-400">
+                    ({countryRules.length})
+                  </span>
                 </h3>
                 <div className="space-y-2">
                   {countryRules.map((rule, index) => (
-                    <motion.div
-                      key={rule.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 + countryIndex * 0.1 + index * 0.05 }}
-                      className={`card cursor-pointer transition-all duration-300 hover:shadow-xl border-l-4 ${
-                        rule.important ? 'border-orange-500' : 'border-green-500'
-                      }`}
-                      onClick={() => toggleExpand(rule.id)}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                            rule.important
-                              ? 'bg-gradient-to-br from-orange-500 to-red-500'
-                              : 'bg-gradient-to-br from-green-500 to-emerald-500'
-                          }`}>
-                            <rule.icon className="w-6 h-6 text-white" />
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-                              {rule.title}
-                              {rule.important && (
-                                <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
-                                  {t('rules.important')}
-                                </span>
-                              )}
-                            </h4>
-                            <motion.div
-                              animate={{ rotate: expandedId === rule.id ? 180 : 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              {expandedId === rule.id ? (
-                                <ChevronUp className="w-5 h-5 text-gray-400" />
-                              ) : (
-                                <ChevronDown className="w-5 h-5 text-gray-400" />
-                              )}
-                            </motion.div>
-                          </div>
-                          <AnimatePresence>
-                            {expandedId === rule.id && (
-                              <motion.p
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="text-sm text-gray-600 mt-2 leading-relaxed"
-                              >
-                                {rule.content}
-                              </motion.p>
-                            )}
-                          </AnimatePresence>
-                          {expandedId !== rule.id && (
-                            <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                              {rule.content}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
+                    <RuleCard key={rule.id} rule={rule} index={index} />
                   ))}
                 </div>
               </motion.div>
@@ -916,24 +893,24 @@ const Kresz = () => {
         </motion.div>
       )}
 
+      {/* Empty State */}
       {filteredRules.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="card text-center py-12"
+          className="rounded-2xl bg-[#121217]/80 border border-white/10 text-center py-14 px-6"
         >
-          <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">
+          <Search className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+          <p className="text-white text-base font-semibold">
             {t('rules.emptyTitle')}
           </p>
-          <p className="text-gray-400 text-sm mt-2">
+          <p className="text-slate-400 text-sm mt-1">
             {t('rules.emptySubtitle')}
           </p>
         </motion.div>
       )}
 
-      {/* Bottom Spacing for Navigation */}
-      <div className="h-8"></div>
+      <div className="h-6" />
     </div>
   )
 }
