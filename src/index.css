@@ -179,6 +179,7 @@ a .module-row:hover { background:var(--surface-hover); padding-inline:20px; box-
 .tool-hero p,.rules-hero p { color:var(--muted); line-height:1.7; font-size:16px; margin:0 0 8px; }
 .tool-hero p,.rules-hero p,.calculator-hero p { max-width:680px; }
 .progress-panel { position:sticky; top:76px; z-index:20; display:grid; grid-template-columns:220px 1fr 60px 46px; align-items:center; gap:24px; background:var(--surface-elevated); color:var(--paper); padding:22px 28px; border:1px solid var(--line); border-bottom:4px solid var(--signal); }
+.progress-panel.hidden { opacity:0; pointer-events:none; transform:translateY(-8px); }
 .progress-panel__count { display:flex; align-items:baseline; gap:10px; }
 .progress-panel__count strong { font:700 30px "Space Grotesk",sans-serif; }
 .progress-panel__count>span { display:flex; flex-direction:column; gap:4px; }
@@ -249,7 +250,10 @@ a .module-row:hover { background:var(--surface-hover); padding-inline:20px; box-
 .journey-checks__list span { font:700 9px "JetBrains Mono",monospace; color:var(--muted); }
 .journey-checks__list strong { font-size:12px; }
 .journey-checks__list svg { width:16px; transition:transform .2s ease; }
-.journey-checks__list p { margin:0; padding:0 28px 18px 45px; overflow:hidden; color:var(--muted); font-size:11px; line-height:1.65; }
+.journey-checks__detail { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows .22s ease,opacity .18s ease; }
+.journey-checks__list>div.expanded .journey-checks__detail { grid-template-rows:1fr; opacity:1; }
+.journey-checks__detail p { min-height:0; overflow:hidden; margin:0; padding:0 28px 0 45px; color:var(--muted); font-size:11px; line-height:1.65; transition:padding-bottom .22s ease; }
+.journey-checks__list>div.expanded .journey-checks__detail p { padding-bottom:18px; }
 
 /* Calculator */
 .calculator-page { padding-block:86px 120px; }
@@ -541,6 +545,7 @@ select:disabled { cursor:not-allowed; opacity:.55; }
 
 @media(prefers-reduced-motion:no-preference) {
   .site-header,.theme-toggle,.calculator-field>div,.check-item,.result-block,.country-chips button,.segmented-control button,.site-footer { transition:background-color .22s ease,color .22s ease,border-color .22s ease; }
+  .progress-panel { transition:background-color .22s ease,color .22s ease,border-color .22s ease,opacity .18s ease,transform .18s ease; }
 }
 
 @media(min-width:1024px) {

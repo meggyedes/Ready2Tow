@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, ChevronDown, Circle, Globe2, RotateCcw } from 'lucide-react'
 import { COUNTRIES, COUNTRY_FLAGS, getCountryChecklistRequirements } from '../constants/internationalRules'
@@ -59,9 +59,22 @@ export default function Checklist() {
   })
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set())
   const [openJourney, setOpenJourney] = useState<string | null>(null)
+  const [showProgressPanel, setShowProgressPanel] = useState(true)
+  const journeyRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => localStorage.setItem('r2t-checklist', JSON.stringify(checked)), [checked])
   useEffect(() => localStorage.setItem('selectedCountries', JSON.stringify(countries)), [countries])
+  useEffect(() => {
+    const target = journeyRef.current
+    if (!target) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowProgressPanel(!entry.isIntersecting),
+      { rootMargin: '-18% 0px -62% 0px', threshold: 0 },
+    )
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [])
 
   const groups = useMemo(() => Array.from(new Set(checklist.map(item => item.group))), [])
   const routeItems = useMemo<RouteItem[]>(() => {
@@ -105,7 +118,7 @@ export default function Checklist() {
         <p>Menj végig a szerelvényen ebben a sorrendben. Nagy gombok, egykezes használat, semmi kapkodás.</p>
       </header>
 
-      <section className="progress-panel">
+      <section className={`progress-panel ${showProgressPanel ? '' : 'hidden'}`}>
         <div className="progress-panel__count"><strong>{checkedCount} / {totalItems}</strong><span>ELLENŐRIZVE{routeItems.length > 0 && <small>+{routeItems.length} ÚTVONAL-SPECIFIKUS</small>}</span></div>
         <div className="progress-track"><motion.div animate={{ width: `${percent}%` }} /></div>
         <span className="progress-percent">{percent}%</span>
@@ -185,7 +198,7 @@ export default function Checklist() {
         </motion.section>}
       </AnimatePresence>
 
-      <section className="journey-checks" id="journey-checks">
+      <section className="journey-checks" id="journey-checks" ref={journeyRef}>
         <div className="journey-checks__intro"><span className="kicker">05 / ÚTKÖZBEN</span><h2>Állj meg.<br />Nézd át újra.</h2><p>Az első néhány tíz kilométer után, majd hosszabb úton rendszeresen keress biztonságos helyet az ellenőrzéshez.</p></div>
         <div className="journey-checks__list">
           {journeyChecks.map((item, index) => {
@@ -194,9 +207,9 @@ export default function Checklist() {
               <button onClick={() => setOpenJourney(expanded ? null : item.id)} aria-expanded={expanded} aria-controls={`journey-${item.id}`}>
                 <span>{String(index + 1).padStart(2, '0')}</span><strong>{item.title}</strong><ChevronDown className={expanded ? 'rotated' : ''} />
               </button>
-              <AnimatePresence initial={false}>
-                {expanded && <motion.p id={`journey-${item.id}`} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .24, ease: 'easeOut' }}>{item.detail}</motion.p>}
-              </AnimatePresence>
+              <div className="journey-checks__detail" id={`journey-${item.id}`}>
+                <p>{item.detail}</p>
+              </div>
             </div>
           })}
         </div>
