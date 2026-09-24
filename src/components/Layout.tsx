@@ -6,8 +6,9 @@ import { useLanguage } from '../context/LanguageContext'
 
 const navItems = [
   { path: '/', label: 'Főoldal', short: '01' },
-  { path: '/checklist', label: 'Indulhatok?', short: '02' },
-  { path: '/kresz', label: 'Szabályok', short: '03' },
+  { path: '/calculator', label: 'Vontathatom?', short: '02' },
+  { path: '/checklist', label: 'Indulhatok?', short: '03' },
+  { path: '/kresz', label: 'Szabályok', short: '04' },
 ]
 
 export default function Layout({ children }: { children: ReactNode }) {
