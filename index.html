@@ -8,13 +8,21 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#08080a" />
+    <script>
+      (function () {
+        var theme = 'dark';
+        try { theme = localStorage.getItem('ready2tow-theme') === 'light' ? 'light' : 'dark'; } catch (e) {}
+        document.documentElement.className = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <meta name="description" content="Ready2Tow - Prémium BE kategóriás vontatási asszisztens, ellenőrzőlista és KRESZ tudástár" />
     <title>Ready2Tow — BE Kategória & Vontatási Cockpit</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#08080a] text-white font-sans antialiased selection:bg-red-600/40 selection:text-white">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

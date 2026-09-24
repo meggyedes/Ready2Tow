@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { ArrowDown, ArrowRight, CheckCircle2, Gauge, Scale, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Gauge, Scale, ShieldCheck } from 'lucide-react'
 
 const modules = [
   { no: '01', title: 'Vontathatom?', text: 'Jármű, pótkocsi, össztömeg és jogosítvány. A számok, amiket indulás előtt ismerned kell.', stat: 'B/BE', meta: 'JOGOSÍTVÁNY', href: '/calculator' },
   { no: '02', title: 'Indulhatok?', text: 'Végigvezetünk a csatlakozás, világítás, gumik, rakomány és dokumentumok ellenőrzésén.', stat: '33', meta: 'ELLENŐRZÉSI PONT', href: '/checklist' },
   { no: '03', title: 'Szabályok', text: 'Országonként átlátható sebességhatárok, felszerelések és úthasználati tudnivalók.', stat: '10', meta: 'ORSZÁG', href: '/kresz' },
   { no: '04', title: 'Határátlépés', text: 'Lásd egy helyen, mi változik, amikor egy másik országba érkezel.', stat: 'HU→DE', meta: 'ÖSSZEHASONLÍTÁS', href: '/kresz#compare' },
-  { no: '05', title: 'Útközben', text: 'Állj meg az első kilométerek után: rögzítés, hőmérséklet, gumik és fékek gyors ellenőrzése.', stat: '20', meta: 'KM UTÁN' },
+  { no: '05', title: 'Útközben', text: 'Állj meg az első kilométerek után: rögzítés, hőmérséklet, gumik és fékek gyors ellenőrzése.', stat: '20', meta: 'KM UTÁN', href: '/checklist#journey-checks' },
 ]
 
 function AnimatedNumber({ value }: { value: number }) {
@@ -63,22 +63,22 @@ export default function Home() {
           <p>Rég vontattál? Néhány perc alatt átnézzük veled, hogy szabályosan és biztonságosan indulhatsz-e.</p>
           <Link className="primary-cta" to="/checklist">Indulás előtti ellenőrzés <ArrowRight /></Link>
         </motion.div>
-        <div className="hero__metric"><span>HU / AUTÓPÁLYA</span><strong>80</strong><b>KM/H</b></div>
-        <a href="#start" className="scroll-cue" aria-label="Tovább"><ArrowDown /></a>
       </section>
 
       <section className="confidence-strip" id="start">
-        <RotatingLicenceCounter />
-        <motion.div className="metric-counter" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .55, delay: .12, ease: [0.16, 1, 0.3, 1] }}>
-          <motion.i initial={{ rotate: -35, scale: .7 }} whileInView={{ rotate: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: .55, delay: .22 }}><Gauge /></motion.i>
-          <span>VONÓFEJTERHELÉS</span>
-          <motion.strong initial={{ opacity: 0, scale: .88 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: .5, delay: .25 }}><AnimatedNumber value={50} />–<AnimatedNumber value={100} /> KG</motion.strong>
-        </motion.div>
-        <motion.div className="metric-counter" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .55, delay: .24, ease: [0.16, 1, 0.3, 1] }}>
-          <motion.i initial={{ rotate: -18, scale: .7 }} whileInView={{ rotate: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: .55, delay: .34 }}><ShieldCheck /></motion.i>
-          <span>SÚLYELOSZTÁS</span>
-          <motion.strong initial={{ opacity: 0, scale: .88 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: .5, delay: .37 }}><AnimatedNumber value={60} /> / <AnimatedNumber value={40} /></motion.strong>
-        </motion.div>
+        <div className="confidence-strip__inner">
+          <RotatingLicenceCounter />
+          <motion.div className="metric-counter" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .55, delay: .12, ease: [0.16, 1, 0.3, 1] }}>
+            <motion.i initial={{ rotate: -35, scale: .7 }} whileInView={{ rotate: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: .55, delay: .22 }}><Gauge /></motion.i>
+            <span>VONÓFEJTERHELÉS</span>
+            <motion.strong initial={{ opacity: 0, scale: .88 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: .5, delay: .25 }}><AnimatedNumber value={50} />–<AnimatedNumber value={100} /> KG</motion.strong>
+          </motion.div>
+          <motion.div className="metric-counter" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .55, delay: .24, ease: [0.16, 1, 0.3, 1] }}>
+            <motion.i initial={{ rotate: -18, scale: .7 }} whileInView={{ rotate: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: .55, delay: .34 }}><ShieldCheck /></motion.i>
+            <span>SÚLYELOSZTÁS</span>
+            <motion.strong initial={{ opacity: 0, scale: .88 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: .5, delay: .37 }}><AnimatedNumber value={60} /> / <AnimatedNumber value={40} /></motion.strong>
+          </motion.div>
+        </div>
       </section>
 
       <section className="module-section page-width">

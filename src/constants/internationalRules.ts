@@ -13,6 +13,17 @@ export interface InternationalRule {
   important?: boolean
 }
 
+export type ChecklistRequirementCategory = 'equipment' | 'documents' | 'trailer' | 'vehicle' | 'speed' | 'toll' | 'other'
+
+export interface CountryChecklistRequirement {
+  id: string
+  title: string
+  description: string
+  category: ChecklistRequirementCategory
+  severity: 'required' | 'important' | 'info'
+  sourceRuleId: string
+}
+
 export const COUNTRIES = [
   'Magyarország',
   'Hollandia',
@@ -216,4 +227,35 @@ export const internationalRules: InternationalRule[] = [
     important: true,
   },
 ]
+
+const EQUIPMENT_RULE_IDS = new Set(['21', '23', '25', '27', '29', '31', '33', '35', '37'])
+const TOLL_RULE_IDS = new Set(['26', '28', '32', '34', '36', '38'])
+
+export function getCountryChecklistRequirements(country: string): CountryChecklistRequirement[] {
+  return internationalRules
+    .filter(rule => rule.country === country)
+    .flatMap<CountryChecklistRequirement>(rule => {
+      if (EQUIPMENT_RULE_IDS.has(rule.id)) {
+        return [{
+          id: 'required-equipment',
+          title: 'Kötelező felszerelések ellenőrizve',
+          description: 'Ellenőrizd az adott ország szabályainál felsorolt kötelező felszereléseket.',
+          category: 'equipment' as const,
+          severity: 'required' as const,
+          sourceRuleId: rule.id,
+        }]
+      }
+      if (TOLL_RULE_IDS.has(rule.id)) {
+        return [{
+          id: 'road-access',
+          title: 'Úthasználati díj vagy matrica ellenőrizve',
+          description: 'Ellenőrizd az útvonalhoz és a szerelvényhez szükséges úthasználati jogosultságot.',
+          category: 'toll' as const,
+          severity: 'important' as const,
+          sourceRuleId: rule.id,
+        }]
+      }
+      return []
+    })
+}
 

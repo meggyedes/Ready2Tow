@@ -1,8 +1,9 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BookOpen, Check, Menu, X } from 'lucide-react'
+import { BookOpen, Check, Menu, Moon, Sun, X } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
+import { useTheme } from '../context/ThemeContext'
 
 const navItems = [
   { path: '/', label: 'Főoldal', short: '01' },
@@ -14,12 +15,22 @@ const navItems = [
 export default function Layout({ children }: { children: ReactNode }) {
   const location = useLocation()
   const { language, setLanguage } = useLanguage()
+  const { theme, toggleTheme } = useTheme()
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' })
     setOpen(false)
-  }, [location.pathname])
+    if (!location.hash) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      return
+    }
+
+    const targetId = decodeURIComponent(location.hash.slice(1))
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [location.pathname, location.hash])
 
   return (
     <div className="site-shell">
@@ -34,6 +45,10 @@ export default function Layout({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="header-actions">
+            <button className="theme-toggle" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Váltás világos módra' : 'Váltás sötét módra'} title={theme === 'dark' ? 'Világos mód' : 'Sötét mód'}>
+              <Sun className="theme-toggle__sun" />
+              <Moon className="theme-toggle__moon" />
+            </button>
             <div className="language-toggle" aria-label="Nyelvválasztó">
               <button className={language === 'hu' ? 'active' : ''} onClick={() => setLanguage('hu')}>HU</button>
               <button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button>

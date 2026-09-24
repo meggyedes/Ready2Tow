@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Check, ChevronDown, Circle, Globe2, RotateCcw } from 'lucide-react'
-import { COUNTRIES, COUNTRY_FLAGS } from '../constants/internationalRules'
+import { COUNTRIES, COUNTRY_FLAGS, getCountryChecklistRequirements } from '../constants/internationalRules'
 
-type Item = { id: string; group: string; title: string; detail: string }
+type ChecklistItemSource = 'base' | 'country'
+type BaseItem = { id: string; group: string; title: string; detail: string }
+type Item = BaseItem & { source: ChecklistItemSource }
+type RouteItem = Item & { requiredByCountries: string[] }
 
-const checklist: Item[] = [
+const baseItems: BaseItem[] = [
   { id: 'license', group: 'DOKUMENTUMOK ÉS TÖMEG', title: 'Megfelelő jogosítvány-kategória', detail: 'B, B96 vagy BE: a forgalmikban szereplő megengedett legnagyobb össztömegek alapján ellenőrizve.' },
   { id: 'beginner', group: 'DOKUMENTUMOK ÉS TÖMEG', title: 'Nem kezdő vezetői engedély', detail: 'B kategóriás jogosultsággal a kezdő vezetői engedély első két évében pótkocsi nem vontatható.' },
   { id: 'car-doc', group: 'DOKUMENTUMOK ÉS TÖMEG', title: 'A vontató forgalmi engedélye', detail: 'Saját tömeg, össztömeg, fékezett és fékezetlen vontatható tömeg ellenőrizve.' },
@@ -34,6 +37,7 @@ const checklist: Item[] = [
   { id: 'speed-known', group: 'INDULÁSI TERV', title: 'Ismered a sebességhatárokat', detail: 'Magyarországon: 50 km/h lakott területen, 70 km/h országúton és autóúton, 80 km/h autópályán.' },
   { id: 'first-stop', group: 'INDULÁSI TERV', title: 'Megvan az első ellenőrző megálló', detail: 'Az első néhány tíz kilométer után biztonságos helyen újra átnézed a szerelvényt.' },
 ]
+const checklist: Item[] = baseItems.map(item => ({ ...item, source: 'base' }))
 
 export default function Checklist() {
   const [checked, setChecked] = useState<string[]>(() => {
@@ -42,14 +46,43 @@ export default function Checklist() {
   const [countries, setCountries] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('selectedCountries') || '["Magyarország"]') } catch { return ['Magyarország'] }
   })
-  const [openGroup, setOpenGroup] = useState<string | null>(null)
+  const [openGroups, setOpenGroups] = useState<Set<string>>(
+    () => new Set(checklist.map(item => item.group)),
+  )
 
   useEffect(() => localStorage.setItem('r2t-checklist', JSON.stringify(checked)), [checked])
   useEffect(() => localStorage.setItem('selectedCountries', JSON.stringify(countries)), [countries])
 
   const groups = useMemo(() => Array.from(new Set(checklist.map(item => item.group))), [])
-  const percent = Math.round((checked.length / checklist.length) * 100)
+  const routeItems = useMemo<RouteItem[]>(() => {
+    const merged = new Map<string, RouteItem>()
+    countries.forEach(country => {
+      getCountryChecklistRequirements(country).forEach(requirement => {
+        const id = `country:${requirement.id}`
+        const existing = merged.get(id)
+        if (existing) existing.requiredByCountries.push(country)
+        else merged.set(id, {
+          id,
+          group: 'ÚTVONAL-SPECIFIKUS',
+          title: requirement.title,
+          detail: requirement.description,
+          source: 'country',
+          requiredByCountries: [country],
+        })
+      })
+    })
+    return Array.from(merged.values())
+  }, [countries])
+  const activeIds = useMemo(() => new Set([...checklist, ...routeItems].map(item => item.id)), [routeItems])
+  const checkedCount = checked.filter(id => activeIds.has(id)).length
+  const totalItems = checklist.length + routeItems.length
+  const percent = Math.round((checkedCount / totalItems) * 100)
   const toggle = (id: string) => setChecked(value => value.includes(id) ? value.filter(item => item !== id) : [...value, id])
+  const toggleGroup = (group: string) => setOpenGroups(current => {
+    const next = new Set(current)
+    next.has(group) ? next.delete(group) : next.add(group)
+    return next
+  })
   const toggleCountry = (country: string) => {
     if (country === 'Magyarország') return
     setCountries(value => value.includes(country) ? value.filter(item => item !== country) : [...value, country])
@@ -63,7 +96,7 @@ export default function Checklist() {
       </header>
 
       <section className="progress-panel">
-        <div className="progress-panel__count"><strong>{checked.length} / {checklist.length}</strong><span>ELLENŐRIZVE</span></div>
+        <div className="progress-panel__count"><strong>{checkedCount} / {totalItems}</strong><span>ELLENŐRIZVE{routeItems.length > 0 && <small>+{routeItems.length} ÚTVONAL-SPECIFIKUS</small>}</span></div>
         <div className="progress-track"><motion.div animate={{ width: `${percent}%` }} /></div>
         <span className="progress-percent">{percent}%</span>
         <button onClick={() => setChecked([])} title="Lista visszaállítása"><RotateCcw /></button>
@@ -74,7 +107,8 @@ export default function Checklist() {
         <div className="country-chips">
           {COUNTRIES.map(country => (
             <button key={country} onClick={() => toggleCountry(country)} className={countries.includes(country) ? 'active' : ''}>
-              <span className={`fi fi-${COUNTRY_FLAGS[country]}`} />{country}
+              <span className={`fi fi-${COUNTRY_FLAGS[country]}`} />
+              <span className="country-chip__copy"><strong>{country}</strong>{getCountryChecklistRequirements(country).length > 0 && <small>+{getCountryChecklistRequirements(country).length} ellenőrzés</small>}</span>
             </button>
           ))}
         </div>
@@ -85,29 +119,63 @@ export default function Checklist() {
         {groups.map((group, groupIndex) => {
           const items = checklist.filter(item => item.group === group)
           const done = items.filter(item => checked.includes(item.id)).length
-          const expanded = openGroup === group || openGroup === null
+          const expanded = openGroups.has(group)
           return (
             <section className="check-group" key={group}>
-              <button className="check-group__heading" onClick={() => setOpenGroup(expanded && openGroup !== null ? null : group)}>
+              <button className="check-group__heading" onClick={() => toggleGroup(group)} aria-expanded={expanded} aria-controls={`check-group-${groupIndex}`}>
                 <span>{String(groupIndex + 1).padStart(2, '0')}</span><h2>{group}</h2><b>{done}/{items.length}</b><ChevronDown className={expanded ? 'rotated' : ''} />
               </button>
-              {expanded && <div className="check-items">
-                {items.map(item => {
-                  const done = checked.includes(item.id)
-                  return (
-                    <motion.button whileTap={{ scale: .985 }} key={item.id} className={`check-item ${done ? 'done' : ''}`} onClick={() => toggle(item.id)}>
-                      <span className="check-control">{done ? <Check /> : <Circle />}</span>
-                      <span className="check-item__copy"><strong>{item.title}</strong><small>{item.detail}</small></span>
-                    </motion.button>
-                  )
-                })}
-              </div>}
+              <AnimatePresence initial={false}>
+                {expanded && <motion.div
+                  id={`check-group-${groupIndex}`}
+                  className="check-group__content"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ height: { duration: .3, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: .2 } }}
+                >
+                  <div className="check-items">
+                    {items.map(item => {
+                      const done = checked.includes(item.id)
+                      return (
+                        <motion.button whileTap={{ scale: .985 }} key={item.id} className={`check-item ${done ? 'done' : ''}`} onClick={() => toggle(item.id)}>
+                          <span className="check-control">{done ? <Check /> : <Circle />}</span>
+                          <span className="check-item__copy"><strong>{item.title}</strong><small>{item.detail}</small></span>
+                        </motion.button>
+                      )
+                    })}
+                  </div>
+                </motion.div>}
+              </AnimatePresence>
             </section>
           )
         })}
       </div>
 
-      <section className="journey-checks">
+      <AnimatePresence initial={false}>
+        {routeItems.length > 0 && <motion.section
+          className="route-checklist"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ height: { duration: .35, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: .2 } }}
+        >
+          <div className="route-checklist__inner">
+            <div className="route-checklist__heading"><span>ÚTVONAL-SPECIFIKUS</span><h2>Határátlépés előtt</h2><b>{routeItems.filter(item => checked.includes(item.id)).length}/{routeItems.length}</b></div>
+            <div className="check-items route-checklist__items">
+              {routeItems.map(item => {
+                const done = checked.includes(item.id)
+                return <motion.button whileTap={{ scale: .985 }} key={item.id} className={`check-item country ${done ? 'done' : ''}`} onClick={() => toggle(item.id)}>
+                  <span className="check-control">{done ? <Check /> : <Circle />}</span>
+                  <span className="check-item__copy"><strong>{item.title}</strong><small>{item.detail}</small><span className="required-countries">Útvonal miatt szükséges: {item.requiredByCountries.map(country => <span key={country}><i className={`fi fi-${COUNTRY_FLAGS[country]}`} />{country}</span>)}</span></span>
+                </motion.button>
+              })}
+            </div>
+          </div>
+        </motion.section>}
+      </AnimatePresence>
+
+      <section className="journey-checks" id="journey-checks">
         <div className="journey-checks__intro"><span className="kicker">05 / ÚTKÖZBEN</span><h2>Állj meg.<br />Nézd át újra.</h2><p>Az első néhány tíz kilométer után, majd hosszabb úton rendszeresen keress biztonságos helyet az ellenőrzéshez.</p></div>
         <div className="journey-checks__list">
           {['Rakományrögzítő hevederek', 'Kapcsolószerkezet', 'Szakítófék-kábel', 'Elektromos csatlakozó', 'Gumiabroncsok', 'Kerekek és kerékrögzítés', 'Rendellenes melegedés', 'Rakomány elmozdulása'].map((label, index) => (
@@ -116,7 +184,7 @@ export default function Checklist() {
         </div>
       </section>
 
-      {checked.length === checklist.length && <motion.div className="complete-banner" initial={{ scale: .96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><Check /><div><span>ELLENŐRZÉS KÉSZ</span><strong>Indulásra kész.</strong></div></motion.div>}
+      {checkedCount === totalItems && <motion.div className="complete-banner" initial={{ scale: .96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><Check /><div><span>ELLENŐRZÉS KÉSZ</span><strong>Indulásra kész.</strong></div></motion.div>}
     </div>
   )
 }
