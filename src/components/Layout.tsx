@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Menu, Moon, Sun, X } from 'lucide-react'
+import { Check, ExternalLink, Menu, Moon, Sun, X } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
 
@@ -82,8 +82,8 @@ export default function Layout({ children }: { children: ReactNode }) {
               <small>Digitális vontatási segédlet.</small>
             </div>
             <div className="site-footer__links">
-              <Link className="site-footer__project" to="/projekt">A projektről <span>↗</span></Link>
-              <a className="site-footer__creator" href="https://danielsoos.eu" target="_blank" rel="noreferrer">danielsoos.eu <span>↗</span></a>
+              <Link className="site-footer__project" to="/projekt">A projektről <ExternalLink aria-hidden="true" /></Link>
+              <a className="site-footer__creator" href="https://danielsoos.eu" target="_blank" rel="noreferrer">danielsoos.eu <ExternalLink aria-hidden="true" /></a>
             </div>
           </div>
           <div className="site-footer__bottom">

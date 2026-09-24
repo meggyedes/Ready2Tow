@@ -28,6 +28,12 @@ export default function Project() {
             <p>Ha valamit csak időnként csinálsz, könnyű elfelejteni azokat a részleteket, amelyek napi használat mellett természetesek lennének. Ilyenkor jól jön egy hely, ahol nem kell hosszasan keresgélni, hanem néhány perc alatt újra át lehet venni a legfontosabbakat, ellenőrizni a szerelvényt, majd nyugodtabban elindulni.</p>
             <p>A READY2TOW ennek a problémának az én megoldásom.</p>
           </div>
+        </div>
+
+        <div className="project-creator__aside">
+          <figure className="project-creator__image">
+            <img src="https://danielsoos.eu/images/profile/me2.JPG" alt="Soós Dániel, a READY2TOW készítője" loading="lazy" />
+          </figure>
           <div className="creator-signature">
             <strong>SOÓS DÁNIEL</strong>
             <span>Software Developer</span>
@@ -35,10 +41,6 @@ export default function Project() {
             <a href="https://danielsoos.eu" target="_blank" rel="noreferrer">danielsoos.eu ↗</a>
           </div>
         </div>
-
-        <figure className="project-creator__image">
-          <img src="https://danielsoos.eu/images/profile/me2.JPG" alt="Soós Dániel, a READY2TOW készítője" loading="lazy" />
-        </figure>
       </section>
     </div>
   )
