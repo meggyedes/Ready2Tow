@@ -36,7 +36,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="site-shell">
       <header className="site-header">
         <div className="site-header__inner">
-          <Link to="/" className="wordmark" aria-label="Ready2Tow főoldal">READY<span>2</span>TOW</Link>
+          <Link to="/" className="wordmark" aria-label="Ready2Tow főoldal" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>READY<span>2</span>TOW</Link>
           <nav className="desktop-nav" aria-label="Fő navigáció">
             {navItems.map((item) => (
               <Link key={item.path} to={item.path} className={location.pathname === item.path ? 'active' : ''}>

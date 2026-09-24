@@ -39,6 +39,17 @@ const baseItems: BaseItem[] = [
 ]
 const checklist: Item[] = baseItems.map(item => ({ ...item, source: 'base' }))
 
+const journeyChecks = [
+  { id: 'straps', title: 'Rakományrögzítő hevederek', detail: 'Nézd meg, hogy egyik heveder sem lazult, csúszott vagy sérült meg. A racsnik legyenek zárva, a kampók pedig biztos ponton maradjanak.' },
+  { id: 'coupling', title: 'Kapcsolószerkezet', detail: 'Ellenőrizd, hogy a vonófej továbbra is teljesen zárt és biztosított, nincs rendellenes játék, zaj vagy látható elmozdulás.' },
+  { id: 'breakaway', title: 'Szakítófék-kábel', detail: 'Legyen a kijelölt rögzítési ponthoz kapcsolva, ne tekeredjen a vonófej köré, ne érjen a földhöz és ne legyen sérült.' },
+  { id: 'electric', title: 'Elektromos csatlakozó', detail: 'Győződj meg róla, hogy a dugó nem lazult ki, a kábel nem feszül és nem ér le. Ellenőrizd újra az irányjelzőket, féklámpát és helyzetjelzőket.' },
+  { id: 'tyres', title: 'Gumiabroncsok', detail: 'Keress sérülést, dudort vagy szokatlan deformációt. Figyelj az abroncsok rendellenes melegedésére és a látható nyomásvesztésre.' },
+  { id: 'wheels', title: 'Kerekek és kerékrögzítés', detail: 'Nézd meg, hogy minden kerékanya a helyén van-e, nincs-e elmozdulásra utaló nyom, repedés vagy rendellenes kerékállás.' },
+  { id: 'heat', title: 'Rendellenes melegedés', detail: 'Óvatosan, érintés nélkül közelítve hasonlítsd össze a kerékagyak és fékek hőmérsékletét. Egy feltűnően melegebb kerék hibára utalhat.' },
+  { id: 'load', title: 'Rakomány elmozdulása', detail: 'Ellenőrizd, hogy a rakomány helyzete nem változott, a súlyelosztás megfelelő maradt, és semmi nem nyomja vagy dörzsöli a ponyvát és oldalfalakat.' },
+]
+
 export default function Checklist() {
   const [checked, setChecked] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('r2t-checklist') || '[]') } catch { return [] }
@@ -49,6 +60,7 @@ export default function Checklist() {
   const [openGroups, setOpenGroups] = useState<Set<string>>(
     () => new Set(checklist.map(item => item.group)),
   )
+  const [openJourney, setOpenJourney] = useState<string | null>(null)
 
   useEffect(() => localStorage.setItem('r2t-checklist', JSON.stringify(checked)), [checked])
   useEffect(() => localStorage.setItem('selectedCountries', JSON.stringify(countries)), [countries])
@@ -178,9 +190,17 @@ export default function Checklist() {
       <section className="journey-checks" id="journey-checks">
         <div className="journey-checks__intro"><span className="kicker">05 / ÚTKÖZBEN</span><h2>Állj meg.<br />Nézd át újra.</h2><p>Az első néhány tíz kilométer után, majd hosszabb úton rendszeresen keress biztonságos helyet az ellenőrzéshez.</p></div>
         <div className="journey-checks__list">
-          {['Rakományrögzítő hevederek', 'Kapcsolószerkezet', 'Szakítófék-kábel', 'Elektromos csatlakozó', 'Gumiabroncsok', 'Kerekek és kerékrögzítés', 'Rendellenes melegedés', 'Rakomány elmozdulása'].map((label, index) => (
-            <div key={label}><span>{String(index + 1).padStart(2, '0')}</span><strong>{label}</strong></div>
-          ))}
+          {journeyChecks.map((item, index) => {
+            const expanded = openJourney === item.id
+            return <div className={expanded ? 'expanded' : ''} key={item.id}>
+              <button onClick={() => setOpenJourney(expanded ? null : item.id)} aria-expanded={expanded} aria-controls={`journey-${item.id}`}>
+                <span>{String(index + 1).padStart(2, '0')}</span><strong>{item.title}</strong><ChevronDown className={expanded ? 'rotated' : ''} />
+              </button>
+              <AnimatePresence initial={false}>
+                {expanded && <motion.p id={`journey-${item.id}`} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .24, ease: 'easeOut' }}>{item.detail}</motion.p>}
+              </AnimatePresence>
+            </div>
+          })}
         </div>
       </section>
 

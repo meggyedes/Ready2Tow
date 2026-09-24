@@ -39,8 +39,7 @@ export default function Kresz() {
   return (
     <div className="rules-page">
       <header className="rules-hero page-width">
-        <span className="kicker">03 / SZABÁLYOK</span>
-        <h1>Országonként.<br />Egy pillantásra.</h1>
+        <div><span className="kicker">03 / SZABÁLYOK</span><h1>Országonként.<br />Egy pillantásra.</h1></div>
         <p>A meglévő adatbázisban szereplő vontatási sebességek, kötelező felszerelések és úthasználati tudnivalók.</p>
       </header>
 
