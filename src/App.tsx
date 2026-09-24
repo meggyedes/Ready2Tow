@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import Checklist from './pages/Checklist'
 import Kresz from './pages/Kresz'
 import Calculator from './pages/Calculator'
+import Project from './pages/Project'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/calculator" element={<Calculator />} />
           <Route path="/checklist" element={<Checklist />} />
           <Route path="/kresz" element={<Kresz />} />
+          <Route path="/projekt" element={<Project />} />
         </Routes>
       </Layout>
     </Router>

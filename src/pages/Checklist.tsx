@@ -57,9 +57,7 @@ export default function Checklist() {
   const [countries, setCountries] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('selectedCountries') || '["Magyarország"]') } catch { return ['Magyarország'] }
   })
-  const [openGroups, setOpenGroups] = useState<Set<string>>(
-    () => new Set(checklist.map(item => item.group)),
-  )
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set())
   const [openJourney, setOpenJourney] = useState<string | null>(null)
 
   useEffect(() => localStorage.setItem('r2t-checklist', JSON.stringify(checked)), [checked])

@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BookOpen, Check, Menu, Moon, Sun, X } from 'lucide-react'
+import { Check, Menu, Moon, Sun, X } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
 
@@ -75,14 +75,26 @@ export default function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
       <footer className="site-footer">
-        <Link to="/" className="wordmark">READY<span>2</span>TOW</Link>
-        <p>Digitális útitárs alkalmi vontatáshoz.</p>
-        <div><BookOpen size={16} /><span>Indulás előtt mindig ellenőrizd az aktuális hivatalos előírásokat.</span></div>
+        <div className="site-footer__inner">
+          <div className="site-footer__top">
+            <div className="site-footer__brand">
+              <Link to="/" className="wordmark">READY<span>2</span>TOW</Link>
+              <small>Digitális vontatási segédlet.</small>
+            </div>
+            <div className="site-footer__links">
+              <Link className="site-footer__project" to="/projekt">A projektről <span>↗</span></Link>
+              <a className="site-footer__creator" href="https://danielsoos.eu" target="_blank" rel="noreferrer">danielsoos.eu <span>↗</span></a>
+            </div>
+          </div>
+          <div className="site-footer__bottom">
+            <a href="https://instagram.com/adanisoos" target="_blank" rel="noreferrer">© 2026 Soós Dániel</a>
+          </div>
+        </div>
       </footer>
       <nav className="bottom-nav" aria-label="Mobil navigáció">
         {navItems.map((item) => (
           <Link key={item.path} to={item.path} className={location.pathname === item.path ? 'active' : ''}>
-            <span>{item.short}</span>{item.label}
+            {item.label}
           </Link>
         ))}
       </nav>

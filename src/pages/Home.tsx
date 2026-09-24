@@ -50,11 +50,43 @@ function RotatingLicenceCounter() {
   )
 }
 
+const mobileStats = [
+  { label: 'B · KÖNNYŰ PÓTKOCSI', values: [750], separator: '', suffix: ' KG', group: 0, icon: Scale },
+  { label: 'B96 · MAX. SZERELVÉNY', values: [4250], separator: '', suffix: ' KG', group: 0, icon: Scale },
+  { label: 'BE · ELMÉLETI MAXIMUM', values: [7000], separator: '', suffix: ' KG', group: 0, icon: Scale },
+  { label: 'VONÓFEJTERHELÉS', values: [50, 100], separator: '–', suffix: ' KG', group: 1, icon: Gauge },
+  { label: 'SÚLYELOSZTÁS', values: [60, 40], separator: ' / ', suffix: '', group: 2, icon: ShieldCheck },
+]
+
+function MobileStatRotator() {
+  const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setActive(current => (current + 1) % mobileStats.length), 2800)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const stat = mobileStats[active]
+  const Icon = stat.icon
+
+  return <div className="mobile-stat" aria-live="polite">
+    <AnimatePresence mode="wait">
+      <motion.div key={stat.label} initial={{ opacity: 0, y: 7 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -7 }} transition={{ duration: .22 }}>
+        <Icon /><span className="mobile-stat__label">{stat.label}</span><strong>{stat.values.map((value, index) => <span key={`${stat.label}-${value}`}>{index > 0 && stat.separator}<AnimatedNumber value={value} /></span>)}{stat.suffix}</strong>
+      </motion.div>
+    </AnimatePresence>
+    <div className="mobile-stat__steps" aria-hidden="true">{[0, 1, 2].map(group => <i className={group === stat.group ? 'active' : ''} key={group} />)}</div>
+  </div>
+}
+
 export default function Home() {
   return (
     <div className="home-page">
       <section className="hero">
-        <img src="/images/IMG_0468.JPEG" alt="Autó utánfutóval közúton" className="hero__image" />
+        <picture>
+          <source media="(max-width: 767px)" srcSet="/images/IMG_8564.JPEG" />
+          <img src="/images/IMG_0468.JPEG" alt="Autó utánfutóval közúton" className="hero__image" />
+        </picture>
         <div className="hero__shade" />
         <div className="hero__roadline" />
         <motion.div className="hero__content" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7 }}>
@@ -79,6 +111,7 @@ export default function Home() {
             <motion.strong initial={{ opacity: 0, scale: .88 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: .5, delay: .37 }}><AnimatedNumber value={60} /> / <AnimatedNumber value={40} /></motion.strong>
           </motion.div>
         </div>
+        <MobileStatRotator />
       </section>
 
       <section className="module-section page-width">
